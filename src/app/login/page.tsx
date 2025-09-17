@@ -6,11 +6,19 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
 
 export default function LoginPage() {
   const [matricula, setMatricula] = useState('');
   const router = useRouter();
 
+  const handleSubmit = () => {
+    if (matricula.length > 0) {
+        // Em uma aplicação real, haveria uma validação da matrícula
+        router.push('/voting');
+    }
+  };
+  
   // Esta função simulará a entrada do teclado físico
   useEffect(() => {
     const handlePhysicalKeypad = (event: KeyboardEvent) => {
@@ -26,15 +34,9 @@ export default function LoginPage() {
     return () => {
       window.removeEventListener('keydown', handlePhysicalKeypad);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matricula]);
 
-
-  const handleSubmit = () => {
-    if (matricula.length > 0) {
-        // Em uma aplicação real, haveria uma validação da matrícula
-        router.push('/voting');
-    }
-  };
 
   return (
     <main className="flex items-center justify-center min-h-screen p-4">
@@ -53,7 +55,15 @@ export default function LoginPage() {
               className="text-center text-2xl h-14 mb-4 tracking-[.2em]"
               autoFocus
             />
-             <div className="text-sm text-muted-foreground text-center space-y-1">
+            <Button 
+                onClick={handleSubmit} 
+                disabled={matricula.length === 0}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg h-12"
+            >
+                <Check className="mr-2 h-6 w-6" />
+                CONFIRMA
+            </Button>
+             <div className="mt-4 text-sm text-muted-foreground text-center space-y-1">
                 <p>Aguardando teclado físico...</p>
                 <p>Aperte a tecla <span className="font-bold text-green-600">VERDE</span> (Enter) para CONFIRMAR</p>
                 <p>Aperte a tecla <span className="font-bold text-orange-500">LARANJA</span> (Backspace) para CORRIGIR</p>
