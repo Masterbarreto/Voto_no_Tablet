@@ -1,9 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Keypad from '@/components/keypad';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
@@ -11,16 +10,24 @@ export default function VotingPage() {
   const [candidateNumber, setCandidateNumber] = useState('');
   const router = useRouter();
 
-  const handleKeypadPress = (key: string) => {
-    if (key === 'LIMPA') {
-      setCandidateNumber('');
-    } else if (candidateNumber.length < 2) { // Assuming 2 digits for candidate number
-      setCandidateNumber(candidateNumber + key);
-    }
-  };
+  // Esta função simulará a entrada do teclado físico
+  useEffect(() => {
+    const handlePhysicalKeypad = (event: KeyboardEvent) => {
+      if (/[0-9]/.test(event.key) && candidateNumber.length < 2) {
+        setCandidateNumber(prev => prev + event.key);
+      } else if (event.key === 'Backspace') {
+        setCandidateNumber(prev => prev.slice(0, -1));
+      } else if (event.key === 'Enter') {
+        handleConfirm();
+      }
+    };
+    window.addEventListener('keydown', handlePhysicalKeypad);
+    return () => {
+      window.removeEventListener('keydown', handlePhysicalKeypad);
+    };
+  }, [candidateNumber]);
   
   const handleConfirm = () => {
-    // Basic validation, in a real scenario you would check if candidate exists
     if (candidateNumber.length > 0) {
       router.push(`/vote/${candidateNumber}`);
     }
@@ -43,12 +50,11 @@ export default function VotingPage() {
                 </div>
             </div>
             <div className="mt-6 text-sm text-muted-foreground">
-                <p>Aperte a tecla <span className="font-bold text-orange-500">LARANJA</span> para CORRIGIR</p>
-                <p>Aperte a tecla <span className="font-bold text-green-600">VERDE</span> para CONFIRMAR</p>
+                <p>Aperte a tecla <span className="font-bold text-orange-500">LARANJA</span> (Backspace) para CORRIGIR</p>
+                <p>Aperte a tecla <span className="font-bold text-green-600">VERDE</span> (Enter) para CONFIRMAR</p>
             </div>
           </CardContent>
         </Card>
-        <Keypad onKeyPress={handleKeypadPress} onConfirm={handleConfirm} />
       </div>
     </main>
   );
