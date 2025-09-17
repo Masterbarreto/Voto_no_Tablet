@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "candidate-1",
+      "description": "Photo of candidate Eleonora Silva",
+      "imageUrl": "https://picsum.photos/seed/1/400/400",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "candidate-2",
+      "description": "Photo of candidate Ricardo Mendes",
+      "imageUrl": "https://picsum.photos/seed/2/400/400",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "candidate-3",
+      "description": "Photo of candidate Júlia Andrade",
+      "imageUrl": "https://picsum.photos/seed/3/400/400",
+      "imageHint": "woman face"
+    },
+    {
+      "id": "candidate-4",
+      "description": "Photo of candidate Marcos Batista",
+      "imageUrl": "https://picsum.photos/seed/4/400/400",
+      "imageHint": "man face"
+    }
+  ]
 }
