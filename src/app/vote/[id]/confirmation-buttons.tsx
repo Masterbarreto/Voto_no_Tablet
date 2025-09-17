@@ -14,7 +14,6 @@ function SubmitButton() {
             type="submit"
             size="lg"
             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg h-16"
-            style={{ backgroundColor: '#28a745' }}
             disabled={pending}
             aria-disabled={pending}
         >
@@ -26,7 +25,7 @@ function SubmitButton() {
             ) : (
                 <>
                     <Check className="mr-2 h-6 w-6" />
-                    CONFIRMAR
+                    CONFIRMA
                 </>
             )}
         </Button>
@@ -35,19 +34,24 @@ function SubmitButton() {
 
 export default function ConfirmationButtons({ candidateId }: { candidateId: string }) {
   return (
-    <form action={submitVote} className="w-full space-y-4 pt-4">
-      <input type="hidden" name="candidateId" value={candidateId} />
-      <div className="grid grid-cols-2 gap-4">
-        <Button asChild size="lg" variant="secondary" className="h-16 text-lg font-bold">
-            <Link href="/">
-                <X className="mr-2 h-6 w-6" />
-                CORRIGIR
-            </Link>
-        </Button>
-        <Button asChild size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg h-16">
-            <SubmitButton />
-        </Button>
+    <div className="w-full pt-4">
+      <div className="flex justify-center mb-4">
+        <p className="text-sm">
+            Aperte a tecla <span className="font-bold text-green-600">VERDE</span> para CONFIRMAR este voto
+        </p>
       </div>
-    </form>
+      <form action={submitVote} className="w-full space-y-4">
+        <input type="hidden" name="candidateId" value={candidateId} />
+        <div className="grid grid-cols-2 gap-4">
+            <Button asChild size="lg" className="h-16 text-lg font-bold text-white bg-orange-500 hover:bg-orange-600">
+                <Link href="/">
+                    <X className="mr-2 h-6 w-6" />
+                    CORRIGE
+                </Link>
+            </Button>
+            <SubmitButton />
+        </div>
+      </form>
+    </div>
   );
 }
