@@ -20,6 +20,7 @@ export default function SplashScreen() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 200 60"
           className="h-24"
+          aria-label="Logo do Senac"
         >
           <path
             fill="#F06E0A"
