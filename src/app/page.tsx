@@ -17,12 +17,12 @@ export default function SplashScreen() {
     >
       <div className="text-center">
         <Image
-            src="/senac-logo.svg"
-            alt="Logo do Senac"
-            width={250}
-            height={90}
-            className="h-28 w-auto"
-            priority
+          src="/Senac_logo.svg"
+          alt="Logo do Senac"
+          width={250}
+          height={90}
+          className="h-28 w-auto"
+          priority
         />
         <p className="mt-8 text-muted-foreground animate-pulse text-lg">
           Toque para iniciar
