@@ -17,7 +17,7 @@ export default function SplashScreen() {
     >
       <div className="text-center">
         <Image
-          src="/Senac_logo.svg"
+          src="/senac-logo.svg"
           alt="Logo do Senac"
           width={250}
           height={90}
