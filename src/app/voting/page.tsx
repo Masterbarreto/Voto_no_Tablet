@@ -5,56 +5,66 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { getCandidates } from '@/lib/candidates';
+import type { Candidate } from '@/lib/candidates';
+import CandidateCard from '@/components/candidate-card';
+import VotingAssistant from '@/components/voting-assistant';
+import { Loader2 } from 'lucide-react';
 
 export default function VotingPage() {
-  const [candidateNumber, setCandidateNumber] = useState('');
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Esta função simulará a entrada do teclado físico
   useEffect(() => {
-    const handlePhysicalKeypad = (event: KeyboardEvent) => {
-      if (/[0-9]/.test(event.key) && candidateNumber.length < 2) {
-        setCandidateNumber(prev => prev + event.key);
-      } else if (event.key === 'Backspace') {
-        setCandidateNumber(prev => prev.slice(0, -1));
-      } else if (event.key === 'Enter') {
-        handleConfirm();
+    async function loadCandidates() {
+      setIsLoading(true);
+      try {
+        const fetchedCandidates = await getCandidates();
+        setCandidates(fetchedCandidates);
+      } catch (error) {
+        console.error("Failed to load candidates:", error);
+        // Opcional: mostrar uma mensagem de erro para o usuário
+      } finally {
+        setIsLoading(false);
       }
-    };
-    window.addEventListener('keydown', handlePhysicalKeypad);
-    return () => {
-      window.removeEventListener('keydown', handlePhysicalKeypad);
-    };
-  }, [candidateNumber]);
-  
-  const handleConfirm = () => {
-    if (candidateNumber.length > 0) {
-      router.push(`/vote/${candidateNumber}`);
     }
+    loadCandidates();
+  }, []);
+
+  const handleManualVote = () => {
+    router.push('/manual-vote');
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen p-4">
-      <div className="flex flex-col md:flex-row gap-8 items-center">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle className="text-center text-3xl">SEU VOTO PARA</CardTitle>
-            <CardDescription className="text-center text-xl">PRESIDENTE</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-                <p>Número:</p>
-                <div className="flex gap-2">
-                    <Input readOnly value={candidateNumber[0] || ''} className="w-12 h-16 text-4xl text-center font-bold" />
-                    <Input readOnly value={candidateNumber[1] || ''} className="w-12 h-16 text-4xl text-center font-bold" />
-                </div>
-            </div>
-            <div className="mt-6 text-sm text-muted-foreground">
-                <p>Aperte a tecla <span className="font-bold text-orange-500">LARANJA</span> (Backspace) para CORRIGIR</p>
-                <p>Aperte a tecla <span className="font-bold text-green-600">VERDE</span> (Enter) para CONFIRMAR</p>
-            </div>
-          </CardContent>
-        </Card>
+    <main className="min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="container mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary tracking-tight">Eleições 2024</h1>
+          <p className="text-muted-foreground text-lg mt-2">Selecione seu candidato para Presidente</p>
+        </header>
+
+        <div className="flex justify-center mb-8 gap-4">
+            <VotingAssistant />
+            <button
+                onClick={handleManualVote}
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8"
+            >
+                Digitar o número
+            </button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {candidates.map((candidate) => (
+              <CandidateCard key={candidate.numero} candidate={candidate} />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

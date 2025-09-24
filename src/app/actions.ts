@@ -2,7 +2,8 @@
 'use server';
 
 import { generateVotingAdvice } from '@/ai/flows/generate-voting-advice';
-import { candidates, getCandidates } from '@/lib/candidates';
+import { getCandidates } from '@/lib/candidates';
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -35,7 +36,8 @@ export async function validateVoter(prevState: any, formData: FormData) {
         const errorData = await response.json();
         return { success: false, message: errorData.message || 'Falha ao validar eleitor.' };
     }
-    // Sucesso, pode prosseguir
+    
+    revalidatePath('/login');
     return { success: true, message: '' };
   } catch (error) {
     console.error('Erro de rede ao validar eleitor:', error);
