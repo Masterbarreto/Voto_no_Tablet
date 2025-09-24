@@ -17,7 +17,7 @@ export default function SplashScreen() {
     >
       <div className="text-center">
         <Image
-          src="/senac-logo.png"
+          src="/senac-logo.png"   // confere que o nome no public é exatamente esse
           alt="Logo do Senac"
           width={250}
           height={90}

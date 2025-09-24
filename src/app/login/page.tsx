@@ -1,42 +1,68 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
+import { validateVoter } from '../actions';
+
+const initialState = {
+  success: false,
+  message: '',
+};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button 
+        type="submit"
+        disabled={pending}
+        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg h-12"
+    >
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+          Verificando...
+        </>
+      ) : (
+        <>
+          <Check className="mr-2 h-6 w-6" />
+          CONFIRMA
+        </>
+      )}
+    </Button>
+  );
+}
 
 export default function LoginPage() {
-  const [matricula, setMatricula] = useState('');
+  const [state, formAction] = useFormState(validateVoter, initialState);
   const router = useRouter();
 
-  const handleSubmit = () => {
-    if (matricula.length > 0) {
-        // Em uma aplicação real, haveria uma validação da matrícula
-        router.push('/voting');
+  useEffect(() => {
+    if (state.success) {
+      router.push('/voting');
     }
-  };
+  }, [state.success, router]);
   
-  // Esta função simulará a entrada do teclado físico
+  // Simula a entrada do teclado físico para o formulário
   useEffect(() => {
     const handlePhysicalKeypad = (event: KeyboardEvent) => {
-      if (/[0-9]/.test(event.key) && matricula.length < 8) {
-        setMatricula(prev => prev + event.key);
-      } else if (event.key === 'Backspace') {
-        setMatricula(prev => prev.slice(0, -1));
-      } else if (event.key === 'Enter') {
-        handleSubmit();
+      const form = event.currentTarget as Window;
+      const formElement = document.querySelector('form');
+      if (formElement && event.key === 'Enter') {
+          // Submete o formulário com a tecla Enter
+          formElement.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
       }
     };
     window.addEventListener('keydown', handlePhysicalKeypad);
     return () => {
       window.removeEventListener('keydown', handlePhysicalKeypad);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matricula]);
-
+  }, []);
 
   return (
     <main className="flex items-center justify-center min-h-screen p-4">
@@ -47,24 +73,22 @@ export default function LoginPage() {
             <CardDescription>Digite sua matrícula para votar</CardDescription>
           </CardHeader>
           <CardContent>
-            <Input
-              type="text"
-              value={matricula}
-              readOnly
-              placeholder="Aguardando matrícula..."
-              className="text-center text-2xl h-14 mb-4 tracking-[.2em]"
-              autoFocus
-            />
-            <Button 
-                onClick={handleSubmit} 
-                disabled={matricula.length === 0}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg h-12"
-            >
-                <Check className="mr-2 h-6 w-6" />
-                CONFIRMA
-            </Button>
+            <form action={formAction}>
+              <Input
+                type="text"
+                name="matricula"
+                placeholder="Digite sua matrícula..."
+                className="text-center text-2xl h-14 mb-4 tracking-[.2em]"
+                autoFocus
+                required
+              />
+              <SubmitButton />
+              {state.message && !state.success && (
+                <p className="mt-2 text-sm font-medium text-destructive text-center">{state.message}</p>
+              )}
+            </form>
              <div className="mt-4 text-sm text-muted-foreground text-center space-y-1">
-                <p>Aguardando teclado físico...</p>
+                <p>Use o teclado para digitar.</p>
                 <p>Aperte a tecla <span className="font-bold text-green-600">VERDE</span> (Enter) para CONFIRMAR</p>
                 <p>Aperte a tecla <span className="font-bold text-orange-500">LARANJA</span> (Backspace) para CORRIGIR</p>
             </div>
