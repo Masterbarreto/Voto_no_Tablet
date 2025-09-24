@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { getVotingAdvice } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,7 +44,7 @@ function SubmitButton() {
 }
 
 export default function VotingAssistant() {
-  const [state, formAction] = useFormState(getVotingAdvice, initialState);
+  const [state, formAction] = useActionState(getVotingAdvice, initialState);
   const [isOpen, setIsOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
