@@ -3,6 +3,20 @@ import { getCandidateById } from '@/lib/candidates';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import ConfirmationButtons from './confirmation-buttons';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+function CandidateImage({ candidate }: { candidate: { nome: string; foto: string | null } }) {
+  const initial = candidate.nome ? candidate.nome.charAt(0).toUpperCase() : '?';
+
+  return (
+    <Avatar className="w-64 h-64 rounded-lg border-4 border-primary shadow-lg text-6xl">
+      {candidate.foto && <AvatarImage src={candidate.foto} alt={`Foto de ${candidate.nome}`} className="object-cover" />}
+      <AvatarFallback className="bg-muted">
+        {initial}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
 
 export default async function VoteConfirmationPage({ params }: { params: { id: string } }) {
   const candidate = await getCandidateById(params.id);
@@ -36,16 +50,7 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
           <CardDescription>CONFIRMAÇÃO</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6">
-          <div className="relative w-64 h-64 rounded-lg overflow-hidden border-4 border-primary shadow-lg">
-            <Image
-              src={candidate.foto}
-              alt={`Foto de ${candidate.nome}`}
-              fill
-              sizes="256px"
-              className="object-cover"
-              data-ai-hint="person portrait"
-            />
-          </div>
+          <CandidateImage candidate={candidate} />
           <div className="space-y-1">
             <h2 className="text-4xl font-extrabold tracking-tight">{candidate.nome}</h2>
             <p className="text-xl text-muted-foreground">{candidate.partido}</p>

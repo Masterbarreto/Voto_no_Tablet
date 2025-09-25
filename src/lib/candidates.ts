@@ -6,8 +6,8 @@ export interface Candidate {
   numero: string;
   nome: string;
   partido: string;
-  foto_url: string;
-  foto: string; 
+  foto_url: string | null;
+  foto: string | null; 
 }
 
 const API_URL = 'https://api-urna.onrender.com';
@@ -59,7 +59,7 @@ export async function getCandidates(): Promise<Candidate[]> {
 
     return (data.data || []).map((c: any) => ({
       ...c,
-      foto: c.foto_url || `https://picsum.photos/seed/${c.numero}/400/400`
+      foto: c.foto_url
     }));
   } catch (error) {
     console.error('Erro detalhado ao buscar candidatos:', error);
@@ -99,7 +99,7 @@ export async function getCandidateById(id: string): Promise<Candidate | undefine
     if (foundCandidate) {
         return {
             ...foundCandidate,
-            foto: foundCandidate.foto_url || `https://picsum.photos/seed/${foundCandidate.numero}/400/400`
+            foto: foundCandidate.foto_url
         };
     }
 
