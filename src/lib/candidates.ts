@@ -12,7 +12,9 @@ export interface Candidate {
 
 const API_URL = 'https://api-urna.onrender.com';
 
-async function getAuthToken(): Promise<string> {
+// Função para obter o token de autenticação, com cache para evitar chamadas repetidas
+export async function getAuthToken(): Promise<string> {
+    noStore(); // Para garantir que a função seja reexecutada em cada request
     const authResponse = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -20,7 +22,8 @@ async function getAuthToken(): Promise<string> {
         email: 'admin@urna.com',
         senha: 'admin123'
       }),
-      cache: 'force-cache' // O token pode ser cacheado por um tempo
+      // O token não deve ser cacheado por muito tempo, mas para a mesma request, pode ser
+      cache: 'no-store' 
     });
     
     if (!authResponse.ok) {
@@ -30,18 +33,22 @@ async function getAuthToken(): Promise<string> {
     return authData.data.token;
 }
 
-
-// A função getCandidates busca todos os candidatos da eleição ativa
-export async function getCandidates(): Promise<Candidate[]> {
+// Busca todos os candidatos da eleição ativa
+export async function getCandidates(eleicaoId?: string): Promise<Candidate[]> {
   noStore();
   try {
     const token = await getAuthToken();
     
-    // 2. Buscar candidatos com o token
-    const response = await fetch(`${API_URL}/api/v1/candidatos`, {
+    let url = `${API_URL}/api/v1/candidatos`;
+    if (eleicaoId) {
+        url += `?eleicao_id=${eleicaoId}`;
+    }
+
+    const response = await fetch(url, {
         headers: {
             'Authorization': `Bearer ${token}`
-        }
+        },
+        cache: 'no-store'
     });
 
     if (!response.ok) {
@@ -60,26 +67,16 @@ export async function getCandidates(): Promise<Candidate[]> {
     }));
   } catch (error) {
     console.error('Erro detalhado ao buscar candidatos:', error);
-    return []; // Retorna um array vazio em caso de qualquer erro
+    return [];
   }
 }
 
-// A função getCandidateById busca um candidato específico pelo número DENTRO de uma eleição
-export async function getCandidateById(numero: string, eleicaoId: string): Promise<Candidate | undefined> {
+// Busca um candidato específico pelo número DENTRO de uma eleição
+export async function getCandidateByNumero(numero: string, eleicaoId: string): Promise<Candidate | null> {
   noStore();
   try {
-    const token = await getAuthToken();
-
-    // Busca na lista de candidatos da eleição específica
-    const response = await fetch(`${API_URL}/api/v1/candidatos?eleicao_id=${eleicaoId}`, {
-         headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    if(!response.ok) return undefined;
-
-    const data = await response.json();
-    
-    const foundCandidate = (data.data.candidatos || []).find((c: Candidate) => c.numero === numero);
+    const candidates = await getCandidates(eleicaoId);
+    const foundCandidate = candidates.find((c: Candidate) => c.numero === numero);
 
     if (foundCandidate) {
         return {
@@ -87,11 +84,9 @@ export async function getCandidateById(numero: string, eleicaoId: string): Promi
             foto: foundCandidate.foto_url
         };
     }
-
-    return undefined;
-
+    return null;
   } catch (error) {
     console.error(`Erro ao buscar candidato ${numero}:`, error);
-    return undefined; // Retorna undefined em caso de erro
+    return null;
   }
 }

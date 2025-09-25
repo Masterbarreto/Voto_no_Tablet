@@ -1,10 +1,11 @@
 
-import { getCandidateById } from '@/lib/candidates';
+import { getCandidateByNumero } from '@/lib/candidates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import ConfirmationButtons from './confirmation-buttons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Candidate } from '@/lib/candidates';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 function CandidateImage({ candidate }: { candidate: Candidate }) {
   const initial = candidate.nome ? candidate.nome.charAt(0).toUpperCase() : '?';
@@ -22,21 +23,24 @@ function CandidateImage({ candidate }: { candidate: Candidate }) {
 }
 
 export default async function VoteConfirmationPage({ params }: { params: { id: string } }) {
-  const { id: candidateNumero } = params;
+  const candidateNumero = params.id;
 
   const voterDataCookie = cookies().get('voter-data');
   if (!voterDataCookie) {
-    // Idealmente, redirecionar para o login se a sessão não existir
     redirect('/login');
   }
+  
   const voterData = JSON.parse(voterDataCookie.value);
   const { eleicaoId } = voterData;
 
+  if(!eleicaoId) {
+     console.error("ID da eleição não encontrado nos cookies.");
+     redirect('/login');
+  }
 
-  const candidate = await getCandidateById(candidateNumero, eleicaoId);
+  const candidate = await getCandidateByNumero(candidateNumero, eleicaoId);
 
   if (!candidate) {
-    // Tela de voto nulo
     return (
         <div className="flex items-center justify-center min-h-screen p-4">
             <Card className="w-full max-w-md text-center shadow-2xl">
@@ -49,7 +53,6 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
                         <h2 className="text-6xl font-extrabold tracking-tight">VOTO NULO</h2>
                         <p className="text-muted-foreground">Número inválido</p>
                     </div>
-                    {/* Passa `null` para indicar voto nulo */}
                     <ConfirmationButtons candidate={null} />
                 </CardContent>
             </Card>
@@ -77,9 +80,4 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
       </Card>
     </main>
   );
-}
-
-function redirect(path: string) {
-    const { redirect: nextRedirect } = require('next/navigation');
-    return nextRedirect(path);
 }

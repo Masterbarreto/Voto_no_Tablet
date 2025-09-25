@@ -1,8 +1,7 @@
 
 'use server';
 
-import { generateVotingAdvice } from '@/ai/flows/generate-voting-advice';
-import { getCandidates } from '@/lib/candidates';
+import { getCandidates, getAuthToken, getCandidateByNumero } from '@/lib/candidates';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -29,16 +28,7 @@ export async function validateVoter(prevState: any, formData: FormData) {
   const { matricula } = validatedFields.data;
 
   try {
-    const authResponse = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'admin@urna.com', senha: 'admin123' }),
-    });
-    if (!authResponse.ok) {
-        return { success: false, message: 'Erro de autenticação interna.' };
-    }
-    const authData = await authResponse.json();
-    const token = authData.data.token;
+    const token = await getAuthToken();
 
     const response = await fetch(`${API_URL}/api/v1/eleitores/validar`, {
       method: 'POST',
@@ -52,10 +42,16 @@ export async function validateVoter(prevState: any, formData: FormData) {
     const data = await response.json();
 
     if (!response.ok || data.status !== 'sucesso' || !data.data.apto_para_votar) {
-      return { success: false, message: data.message || 'Matrícula inválida ou eleitor não apto para votar.' };
+       let message = data.message || 'Matrícula inválida ou eleitor não apto para votar.';
+        if (data.data?.eleitor?.ja_votou) {
+            message = 'Este eleitor já votou.';
+        }
+        if (data.message?.includes('não encontrado')) {
+            message = 'Eleitor não encontrado com essa matrícula.';
+        }
+      return { success: false, message: message };
     }
     
-    // Armazenar os dados da sessão em cookies
     cookies().set('voter-data', JSON.stringify({
       matricula: data.data.eleitor.matricula,
       eleicaoId: data.data.eleicao.id
@@ -121,7 +117,6 @@ export async function submitVote(formData: FormData) {
     throw new Error('Dados do voto incompletos');
   }
 
-  // Se o voto for nulo, o ID é 'NULO'
   const isNullVote = candidateNumero === 'NULO';
   
   try {
@@ -140,14 +135,12 @@ export async function submitVote(formData: FormData) {
     });
 
     if (!response.ok) {
-       console.error('Falha ao registrar voto na API');
-       const errorText = await response.text();
-       console.error('API Response:', errorText);
+       const errorData = await response.json();
+       console.error('Falha ao registrar voto na API:', errorData.message || 'Erro desconhecido');
     }
   } catch (error) {
     console.error('Erro de rede ao enviar voto:', error);
   } finally {
-     // Limpar cookie da sessão de votação
     cookies().delete('voter-data');
     redirect('/thank-you');
   }
