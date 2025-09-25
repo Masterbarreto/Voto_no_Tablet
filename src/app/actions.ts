@@ -47,9 +47,6 @@ export async function validateVoter(prevState: any, formData: FormData) {
         if (data.data?.eleitor?.ja_votou) {
             message = 'Este eleitor já votou.';
         }
-        if (data.message?.includes('não encontrado')) {
-            message = 'Eleitor não encontrado com essa matrícula.';
-        }
       return { success: false, message: message };
     }
     
