@@ -14,7 +14,7 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
             <Card className="w-full max-w-md text-center shadow-2xl">
                 <CardHeader>
                 <CardTitle className="text-3xl font-bold text-primary">SEU VOTO PARA</CardTitle>
-                <CardDescription>PRESIDENTE</CardDescription>
+                <CardDescription>CONFIRMAÇÃO</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-6">
                     <div className="space-y-1">
@@ -32,7 +32,7 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
       <Card className="w-full max-w-md text-center shadow-2xl">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-primary">SEU VOTO PARA</CardTitle>
-          <CardDescription>PRESIDENTE</CardDescription>
+          <CardDescription>CONFIRMAÇÃO</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6">
           <div className="relative w-64 h-64 rounded-lg overflow-hidden border-4 border-primary shadow-lg">

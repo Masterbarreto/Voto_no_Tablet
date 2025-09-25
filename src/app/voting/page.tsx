@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export default function VotingPage() {
@@ -38,8 +38,7 @@ export default function VotingPage() {
       <div className="flex flex-col md:flex-row gap-8 items-center">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle className="text-center text-3xl">SEU VOTO PARA</CardTitle>
-            <CardDescription className="text-center text-xl">PRESIDENTE</CardDescription>
+            <CardTitle className="text-center text-3xl">DIGITE SEU VOTO</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
