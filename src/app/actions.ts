@@ -25,7 +25,7 @@ export async function validateVoter(prevState: any, formData: FormData) {
     };
   }
   
-  // Verificação temporariamente removida para permitir o fluxo
+  // Verificação da API removida para permitir o fluxo
   revalidatePath('/login');
   return { success: true, message: '' };
 }
