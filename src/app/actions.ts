@@ -6,6 +6,7 @@ import { getCandidates } from '@/lib/candidates';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { cookies } from 'next/headers';
 
 const API_URL = 'https://api-urna.onrender.com';
 
@@ -25,9 +26,48 @@ export async function validateVoter(prevState: any, formData: FormData) {
     };
   }
   
-  // Verificação da API removida para permitir o fluxo
-  revalidatePath('/login');
-  return { success: true, message: '' };
+  const { matricula } = validatedFields.data;
+
+  try {
+    const authResponse = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@urna.com', senha: 'admin123' }),
+    });
+    if (!authResponse.ok) {
+        return { success: false, message: 'Erro de autenticação interna.' };
+    }
+    const authData = await authResponse.json();
+    const token = authData.data.token;
+
+    const response = await fetch(`${API_URL}/api/v1/eleitores/validar`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ matricula }),
+    });
+    
+    const data = await response.json();
+
+    if (!response.ok || data.status !== 'sucesso' || !data.data.apto_para_votar) {
+      return { success: false, message: data.message || 'Matrícula inválida ou eleitor não apto para votar.' };
+    }
+    
+    // Armazenar os dados da sessão em cookies
+    cookies().set('voter-data', JSON.stringify({
+      matricula: data.data.eleitor.matricula,
+      eleicaoId: data.data.eleicao.id
+    }), { httpOnly: true, path: '/' });
+
+    revalidatePath('/login');
+    return { success: true, message: '' };
+
+  } catch (error) {
+    console.error('Validation error:', error);
+    return { success: false, message: 'Ocorreu um erro ao validar a matrícula. Tente novamente.' };
+  }
 }
 
 
@@ -68,38 +108,47 @@ export async function getVotingAdvice(prevState: any, formData: FormData) {
 
 export async function submitVote(formData: FormData) {
   const candidateId = formData.get('candidateId') as string;
+  const candidateNumero = formData.get('candidateNumero') as string;
+  
+  const voterDataCookie = cookies().get('voter-data');
+  if (!voterDataCookie) {
+      throw new Error('Sessão do eleitor não encontrada.');
+  }
+  const voterData = JSON.parse(voterDataCookie.value);
+  const { matricula, eleicaoId } = voterData;
 
-  if (!candidateId) {
-    throw new Error('Candidate ID is required');
+  if (!candidateId || !matricula || !eleicaoId) {
+    throw new Error('Dados do voto incompletos');
   }
 
-  // A API de votos não precisa de autenticação especial,
-  // mas a validação de matrícula já garante que o eleitor é válido.
-  // A API de votos deve associar o voto ao eleitor que acabou de ser validado.
-  // Por simplicidade, assumimos que a sessão do eleitor é gerenciada no backend
-  // ou que a API de votos identifica o eleitor de outra forma (ex: por urna).
-  // No nosso caso, vamos apenas enviar o número do candidato.
-
+  // Se o voto for nulo, o ID é 'NULO'
+  const isNullVote = candidateNumero === 'NULO';
+  
   try {
-    const response = await fetch(`${API_URL}/api/votos`, { // Endpoint fictício, ajuste para o real se necessário
+    const votePayload = {
+      eleitor_matricula: matricula,
+      candidato_id: isNullVote ? null : candidateId,
+      eleicao_id: eleicaoId,
+      voto_nulo: isNullVote,
+      voto_branco: false
+    };
+
+    const response = await fetch(`${API_URL}/api/urna-votacao/votos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ numero_candidato: candidateId }),
+      body: JSON.stringify(votePayload),
     });
+
     if (!response.ok) {
        console.error('Falha ao registrar voto na API');
        const errorText = await response.text();
        console.error('API Response:', errorText);
-       // Mesmo com erro, redirecionamos para não travar a urna
-       redirect('/thank-you');
-       return;
     }
   } catch (error) {
     console.error('Erro de rede ao enviar voto:', error);
-    // Mesmo com erro, redirecionamos para não travar a urna
+  } finally {
+     // Limpar cookie da sessão de votação
+    cookies().delete('voter-data');
     redirect('/thank-you');
-    return;
   }
-  
-  redirect('/thank-you');
 }

@@ -3,8 +3,10 @@ import { getCandidateById } from '@/lib/candidates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import ConfirmationButtons from './confirmation-buttons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { Candidate } from '@/lib/candidates';
+import { cookies } from 'next/headers';
 
-function CandidateImage({ candidate }: { candidate: { nome: string; foto: string | null } }) {
+function CandidateImage({ candidate }: { candidate: Candidate }) {
   const initial = candidate.nome ? candidate.nome.charAt(0).toUpperCase() : '?';
 
   return (
@@ -20,7 +22,18 @@ function CandidateImage({ candidate }: { candidate: { nome: string; foto: string
 }
 
 export default async function VoteConfirmationPage({ params }: { params: { id: string } }) {
-  const candidate = await getCandidateById(params.id);
+  const { id: candidateNumero } = params;
+
+  const voterDataCookie = cookies().get('voter-data');
+  if (!voterDataCookie) {
+    // Idealmente, redirecionar para o login se a sessão não existir
+    redirect('/login');
+  }
+  const voterData = JSON.parse(voterDataCookie.value);
+  const { eleicaoId } = voterData;
+
+
+  const candidate = await getCandidateById(candidateNumero, eleicaoId);
 
   if (!candidate) {
     // Tela de voto nulo
@@ -36,7 +49,8 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
                         <h2 className="text-6xl font-extrabold tracking-tight">VOTO NULO</h2>
                         <p className="text-muted-foreground">Número inválido</p>
                     </div>
-                    <ConfirmationButtons candidateId="NULO" />
+                    {/* Passa `null` para indicar voto nulo */}
+                    <ConfirmationButtons candidate={null} />
                 </CardContent>
             </Card>
         </div>
@@ -58,9 +72,14 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
                 <p className="text-lg text-muted-foreground md:text-xl">{candidate.partido}</p>
               </div>
           </div>
-          <ConfirmationButtons candidateId={candidate.numero} />
+          <ConfirmationButtons candidate={candidate} />
         </CardContent>
       </Card>
     </main>
   );
+}
+
+function redirect(path: string) {
+    const { redirect: nextRedirect } = require('next/navigation');
+    return nextRedirect(path);
 }

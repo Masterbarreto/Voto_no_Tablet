@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { X, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
+import type { Candidate } from '@/lib/candidates';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -33,7 +34,7 @@ function SubmitButton() {
     )
 }
 
-export default function ConfirmationButtons({ candidateId }: { candidateId: string }) {
+export default function ConfirmationButtons({ candidate }: { candidate: Candidate | null }) {
     const router = useRouter();
   
     const handleCorrection = () => {
@@ -50,7 +51,10 @@ export default function ConfirmationButtons({ candidateId }: { candidateId: stri
         </p>
       </div>
       <form action={submitVote} className="w-full space-y-4">
-        <input type="hidden" name="candidateId" value={candidateId} />
+        {/* Se o candidato existir, envie o ID, senão, envie 'NULO' */}
+        <input type="hidden" name="candidateId" value={candidate?.id ?? 'NULO'} />
+        <input type="hidden" name="candidateNumero" value={candidate?.numero ?? 'NULO'} />
+
         <div className="grid grid-cols-2 gap-4">
             <Button type="button" onClick={handleCorrection} size="lg" className="h-16 text-lg font-bold text-white bg-orange-500 hover:bg-orange-600">
                 <X className="mr-2 h-6 w-6" />
