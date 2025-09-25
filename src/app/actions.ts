@@ -28,17 +28,58 @@ export async function validateVoter(prevState: any, formData: FormData) {
   const { matricula } = validatedFields.data;
 
   try {
-    const response = await fetch(`${API_URL}/eleitores/${matricula}`);
-    if (response.status === 404) {
-      return { success: false, message: 'Eleitor não encontrado.' };
+    // 1. Autenticar para obter o token
+    const authResponse = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'admin@urna.com', // Credenciais de serviço
+        senha: 'admin123'
+      }),
+    });
+
+    if (!authResponse.ok) {
+        return { success: false, message: 'Falha na autenticação do sistema.' };
     }
-    if (!response.ok) {
-        const errorData = await response.json();
-        return { success: false, message: errorData.message || 'Falha ao validar eleitor.' };
+
+    const authData = await authResponse.json();
+    const token = authData.data.token;
+
+    // 2. Validar o eleitor com o token
+    const validationResponse = await fetch(`${API_URL}/api/v1/eleitores/validar`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ matricula }),
+    });
+
+    const validationData = await validationResponse.json();
+
+    if (validationData.status === 'sucesso') {
+      if (validationData.data.apto_para_votar) {
+        revalidatePath('/login');
+        return { success: true, message: '' };
+      } else {
+        // Tratar casos onde o eleitor não está apto
+        if (validationData.data.eleitor?.ja_votou) {
+          return { success: false, message: 'Este eleitor já votou.' };
+        }
+        switch (validationData.data.status) {
+          case 'eleicao_inativa':
+            return { success: false, message: 'A eleição não está ativa no momento.' };
+          case 'sem_eleicao':
+            return { success: false, message: 'Eleitor não associado a uma eleição.' };
+          default:
+            return { success: false, message: 'Eleitor não está apto para votar.' };
+        }
+      }
+    } else {
+      // Tratar erros da API
+      return { success: false, message: validationData.message || 'Eleitor não encontrado.' };
     }
-    
-    revalidatePath('/login');
-    return { success: true, message: '' };
+
   } catch (error) {
     console.error('Erro de rede ao validar eleitor:', error);
     return { success: false, message: 'Erro de comunicação com o servidor. Tente novamente.' };
