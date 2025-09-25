@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
+import { generateVotingAdvice } from '@/ai/flows/generate-voting-advice';
 
 const API_URL = 'https://api-urna.onrender.com';
 
@@ -128,15 +129,21 @@ export async function submitVote(formData: FormData) {
       voto_branco: false
     };
 
+    const token = await getAuthToken();
+
     const response = await fetch(`${API_URL}/api/urna-votacao/votos`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
       body: JSON.stringify(votePayload),
     });
 
     if (!response.ok) {
        const errorData = await response.json();
        console.error('Falha ao registrar voto na API:', errorData.message || 'Erro desconhecido');
+       // Mesmo com erro na API, redirecionamos para evitar que o eleitor fique preso
     }
   } catch (error) {
     console.error('Erro de rede ao enviar voto:', error);
