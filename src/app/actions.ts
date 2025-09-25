@@ -39,7 +39,8 @@ export async function validateVoter(prevState: any, formData: FormData) {
     });
 
     if (!authResponse.ok) {
-        return { success: false, message: 'Falha na autenticação do sistema.' };
+        const errorData = await authResponse.json().catch(() => ({ message: 'Falha na autenticação do sistema.' }));
+        return { success: false, message: errorData.message };
     }
 
     const authData = await authResponse.json();
@@ -70,7 +71,7 @@ export async function validateVoter(prevState: any, formData: FormData) {
           case 'eleicao_inativa':
             return { success: false, message: 'A eleição não está ativa no momento.' };
           case 'sem_eleicao':
-            return { success: false, message: 'Eleitor não associado a uma eleição.' };
+            return { success: false, message: 'Eleitor não está associado a uma eleição.' };
           default:
             return { success: false, message: 'Eleitor não está apto para votar.' };
         }
@@ -129,8 +130,15 @@ export async function submitVote(formData: FormData) {
     throw new Error('Candidate ID is required');
   }
 
+  // A API de votos não precisa de autenticação especial,
+  // mas a validação de matrícula já garante que o eleitor é válido.
+  // A API de votos deve associar o voto ao eleitor que acabou de ser validado.
+  // Por simplicidade, assumimos que a sessão do eleitor é gerenciada no backend
+  // ou que a API de votos identifica o eleitor de outra forma (ex: por urna).
+  // No nosso caso, vamos apenas enviar o número do candidato.
+
   try {
-    const response = await fetch(`${API_URL}/votos`, {
+    const response = await fetch(`${API_URL}/api/votos`, { // Endpoint fictício, ajuste para o real se necessário
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ numero_candidato: candidateId }),

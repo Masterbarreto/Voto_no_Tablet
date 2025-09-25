@@ -19,6 +19,7 @@ export default async function VoteConfirmationPage({ params }: { params: { id: s
                 <CardContent className="flex flex-col items-center gap-6">
                     <div className="space-y-1">
                         <h2 className="text-6xl font-extrabold tracking-tight">VOTO NULO</h2>
+                        <p className="text-muted-foreground">Número inválido</p>
                     </div>
                     <ConfirmationButtons candidateId="NULO" />
                 </CardContent>
