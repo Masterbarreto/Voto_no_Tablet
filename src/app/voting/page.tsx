@@ -10,8 +10,13 @@ export default function VotingPage() {
   const [candidateNumber, setCandidateNumber] = useState('');
   const router = useRouter();
 
-  // Esta função simulará a entrada do teclado físico
   useEffect(() => {
+    const handleConfirm = () => {
+      if (candidateNumber.length > 0) {
+        router.push(`/vote/${candidateNumber}`);
+      }
+    };
+
     const handlePhysicalKeypad = (event: KeyboardEvent) => {
       if (/[0-9]/.test(event.key) && candidateNumber.length < 2) {
         setCandidateNumber(prev => prev + event.key);
@@ -25,14 +30,8 @@ export default function VotingPage() {
     return () => {
       window.removeEventListener('keydown', handlePhysicalKeypad);
     };
-  }, [candidateNumber, router]); // Adicionado router como dependência
+  }, [candidateNumber, router]);
   
-  const handleConfirm = () => {
-    if (candidateNumber.length > 0) {
-      router.push(`/vote/${candidateNumber}`);
-    }
-  };
-
   return (
     <main className="flex items-center justify-center min-h-screen p-4">
       <div className="flex flex-col md:flex-row gap-8 items-center">
